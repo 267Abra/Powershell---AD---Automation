@@ -1,0 +1,4 @@
+# To display users only from a specific domain container (Organizational Unit), use the –SearchBase parameter:
+
+Get-ADUser -SearchBase 'OU=London,DC=woshub,DC=loc' -filter * `
+ -properties PasswordExpired, PasswordLastSet, PasswordNeverExpires | ft Name, PasswordExpired, PasswordLastSet, PasswordNeverExpires

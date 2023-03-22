@@ -1,0 +1,110 @@
+## Created by Jeremy Stienne - 2020
+
+##Log files
+$cleaning_logs = "C:\WPT\Enablon\offboarding\ps_logs\clearing_accounts.log"
+$deleting_logs = "C:\WPT\Enablon\offboarding\ps_logs\terminating_accounts.log"
+
+##Get the today date
+$today=get-date
+
+##Disable user accounts based on expiration date
+##################################################################################################
+
+##Get disabled and expired users
+
+$disabled_users = get-aduser -Filter {enabled -ne $true} -SearchBase "OU=Users,OU=Accounts,OU=WK-Enablon,OU=EU-Organizations,DC=EU,DC=wkglobal,DC=com" -server eu -Properties *
+$expired_users = Search-ADAccount -AccountExpired -UsersOnly -SearchBase "OU=Users,OU=Accounts,OU=WK-Enablon,OU=EU-Organizations,DC=EU,DC=wkglobal,DC=com" -Server eu | Where Enabled -eq $true
+
+foreach ($goneuser in $disabled_users)
+{
+    
+    try {
+            ##Set extension attribute 11 to 'leave'
+            Set-aduser -Identity $goneuser -add @{"ExtensionAttribute11"="Leave"} -server eu
+
+            ##Clear manager attribute
+            Set-ADUser -Identity $goneuser -clear manager -Server eu
+
+            ##Add a new line to the log file
+            Out-File -FilePath $cleaning_logs -InputObject "$today : $goneuser was already disabled, now has been cleared and moved to Disabled users OU" -Append          
+        }
+
+    catch {
+            Out-File -FilePath $cleaning_logs -InputObject "$today : $goneuser : an error occured" -Append
+            $_.Exception | Out-File -FilePath $cleaning_logs -Append
+            }
+
+    finally {
+            ##Remove the security groups assigned to the user account
+            Get-ADUser -Identity $goneuser.SamAccountName -server eu | Get-ADPrincipalGroupMembership -server eu | foreach {Remove-ADGroupMember $_ -Members $goneuser -Confirm:$false -server eu}
+
+            ##Move to "HR 30 Day Mailbox Hold" OU and add the date of effective disable
+            Get-ADUser -Identity $goneuser -server eu | Move-ADObject -TargetPath "OU=HR 30 Day Mailbox Hold,OU=Accounts,OU=WK-Enablon,OU=EU-Organizations,DC=EU,DC=wkglobal,DC=com" -server eu
+            Set-ADUser -Identity $goneuser -Description "Disabled on $today" -server eu      
+            }
+
+
+}
+
+foreach ($goneuser in $expired_users)
+{
+    
+    try {
+            ##Disable the account 
+            Disable-ADAccount -Identity $goneuser -server eu
+
+            ##Set extension attribute 11 to 'leave'
+            Set-aduser -Identity $goneuser -add @{"ExtensionAttribute11"="Leave"} -server eu 
+            
+            ##Clear manager attribute
+            Set-ADUser -Identity $goneuser -clear manager -Server eu   
+
+            ##Add a new line to the log file
+            Out-File -FilePath $cleaning_logs -InputObject "$today : $goneuser has been disabled, cleared and moved to Disabled users OU" -Append
+                   
+        }
+
+    catch {
+            Out-File -FilePath $cleaning_logs -InputObject "$today : $goneuser : an error occured" -Append
+            $_.Exception | Out-File -FilePath $cleaning_logs -Append
+            }
+
+    finally {
+            ##Remove the security groups assigned to the user account
+            Get-ADUser -Identity $goneuser.SamAccountName -server eu | Get-ADPrincipalGroupMembership -server eu | foreach {Remove-ADGroupMember $_ -Members $goneuser -Confirm:$false -server eu}
+            
+            ##Move to "HR 30 Day Mailbox Hold" OU and add the date of effective disable
+            Set-ADUser -Identity $goneuser -Description "Disabled on $today" -server eu
+            Get-ADUser -Identity $goneuser -server eu | Move-ADObject -TargetPath "OU=HR 30 Day Mailbox Hold,OU=Accounts,OU=WK-Enablon,OU=EU-Organizations,DC=EU,DC=wkglobal,DC=com" -server eu
+            }
+
+}
+
+##Move to temrinated users after legal 30day
+##################################################################################################
+
+$onholdusers = Search-ADAccount -AccountExpired -UsersOnly -SearchBase "OU=HR 30 Day Mailbox Hold,OU=Accounts,OU=WK-Enablon,OU=EU-Organizations,DC=EU,DC=wkglobal,DC=com" -server eu
+
+foreach ($user in $onholdusers)
+{
+    $expirationdateplus30days = ($user.AccountExpirationDate).adddays(30)
+
+    if ($expirationdateplus30days -lt $today)
+    {
+        try {
+            ##Clear extension attribute 13 (Office 365 licence)
+            Get-aduser -Identity $user -Properties ExtensionAttribute13 -server eu | Set-aduser -clear ExtensionAttribute13 -server eu
+                       
+            Out-File -FilePath $deleting_logs -InputObject "$today : $user account has been moved to terminated users" -Append
+            }
+
+        catch {
+            Out-File -FilePath $deleting_logs -InputObject "$today : $user couldn't be moved to terminated users" -Append
+            $_.Exception | Out-File -FilePath $deleting_logs -Append
+            }
+
+        finally{
+                get-ADUser $user.SamAccountName -server eu | Move-ADObject -TargetPath "OU=Terminated Users,OU=Accounts,OU=WK-Enablon,OU=EU-Organizations,DC=EU,DC=wkglobal,DC=com" -Server eu
+               }
+    }
+}

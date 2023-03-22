@@ -1,0 +1,5 @@
+# Replace "OU=Users,DC=example,DC=com" with the distinguished name of the OU where your users are located
+$ou = "OU=Users,DC=example,DC=com"
+
+# Get all user objects in the specified OU and set their employeeID attribute to "E3"
+Get-ADUser -Filter * -SearchBase $ou | ForEach-Object { Set-ADUser $_ -EmployeeID "E3" }

@@ -1,0 +1,35 @@
+# This is sample script created for new - users.
+# This script does not include any information like #Adress ( street, country, zip, City ) -> and does not include `
+# information Like -EmployeeID and no Extension Attributes)
+
+
+# Define the user's attributes
+$firstName = "Daria"
+$lastName = "Kwiatek"
+$displayName = "Daria Kwiatek"
+$UserPrincipalName = "Adam2.Kwiatek@contoso.com"
+$office = "Headquarters"
+$email = "Daria.kwiatek@contoso.com"
+$jobTitle = "Manager"
+$department = "Sales"
+$company = "TwiceX"
+$manager = "CN=Krystian Jan,OU=GBS,DC=corp,DC=contoso,DC=com"
+
+
+
+# Create the user object
+New-ADUser `
+  -Name "$firstName $lastName" `
+  -GivenName $firstName `
+  -Surname $lastName `
+  -DisplayName $displayName `
+  -UserPrincipalName $UserPrincipalName `
+  -Office $office `
+  -EmailAddress $email `
+  -Title $jobTitle `
+  -Department $department `
+  -Company $company `
+  -Manager $manager `
+  -AccountExpirationDate (Get-Date).AddYears(1) `
+  -Enabled $true `
+  -AccountPassword $(ConvertTo-SecureString "Casio1$$asap" -AsPlainText -Force)

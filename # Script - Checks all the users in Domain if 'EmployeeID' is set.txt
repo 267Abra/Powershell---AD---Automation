@@ -1,0 +1,6 @@
+# script that checks if the EmployeeID attribute is set up for all users in the domain
+
+Get-ADUser -Filter * -Properties EmployeeID |
+    Where-Object { $_.EmployeeID -eq $null } |
+    Select-Object Name, DistinguishedName |
+    Export-Csv -Path C:\UsersWithoutEmployeeID.csv -NoTypeInformation

@@ -1,0 +1,8 @@
+# Get all user accounts from a specific OU
+
+$users = Get-ADUser -Filter * -SearchBase "OU=USERS,OU=CORP,DC=corp,DC=contoso,DC=com"
+
+# Disable each user account
+foreach ($user in $users) {
+    Enable-ADAccount -Identity $user
+}

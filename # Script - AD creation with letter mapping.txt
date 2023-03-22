@@ -1,0 +1,32 @@
+ # Define the characters to search for and their mapped counterparts
+$mapping = @{
+    'ą' = 'a'
+    'ć' = 'c'
+    'ę' = 'e'
+    'ł' = 'l'
+    'ń' = 'n'
+    'ó' = 'o'
+    'ś' = 's'
+    'ź' = 'z'
+    'ż' = 'z'
+}
+
+# Define the regular expression pattern to match the specified characters
+$charactersToSearchFor = '[' + [regex]::Escape(($mapping.Keys -join '')) + ']'
+
+# Search for users with the specified characters in their user principal name or SamAccountName
+$users = Get-ADUser -Filter * -Properties UserPrincipalName, SamAccountName | Where-Object {($_.UserPrincipalName -match $charactersToSearchFor) -or ($_.SamAccountName -match $charactersToSearchFor)}
+
+# Loop through each user and update their user principal name and SamAccountName
+foreach ($user in $users) {
+    # Replace each character with its mapped counterpart
+    $newUserPrincipalName = $user.UserPrincipalName
+    $newSamAccountName = $user.SamAccountName
+    foreach ($char in $mapping.Keys) {
+        $newUserPrincipalName = $newUserPrincipalName -replace $char, $mapping[$char]
+        $newSamAccountName = $newSamAccountName -replace $char, $mapping[$char]
+    }
+
+    # Update the user's properties with the new values
+    Set-ADUser -Identity $user -UserPrincipalName $newUserPrincipalName -SamAccountName $newSamAccountName
+}

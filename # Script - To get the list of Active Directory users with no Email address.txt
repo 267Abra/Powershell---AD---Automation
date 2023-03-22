@@ -1,0 +1,3 @@
+# To get the list of Active Directory users with no Email address 
+
+Get-ADUser -Filter * -Properties EmailAddress | where -Property EmailAddress -eq $null

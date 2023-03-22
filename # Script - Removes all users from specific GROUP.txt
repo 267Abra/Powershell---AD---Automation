@@ -1,0 +1,7 @@
+$groupname = "Cloud Group" # Replace with the name of the group
+
+$users = Get-ADGroupMember -Identity $groupname | Where-Object { $_.objectClass -eq 'user' }
+
+foreach ($user in $users) {
+    Remove-ADGroupMember -Identity $groupname -Members $user -Confirm:$false
+}

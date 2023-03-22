@@ -1,0 +1,6 @@
+$ou = "OU=MyOU,DC=mydomain,DC=com" # replace with the DN of your OU
+$company = "MyCompany" # replace with the company name you want to set
+
+Get-ADUser -Filter * -SearchBase $ou | ForEach-Object {
+    Set-ADUser $_ -Company $company
+}

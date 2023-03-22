@@ -1,0 +1,20 @@
+# Replace "OU=Users,DC=example,DC=com" with the distinguished name of the OU where your users are located
+$ou = "DC=corp,DC=contoso,DC=com"
+
+# Get all user objects in the specified OU
+Get-ADUser -Filter * -SearchBase $ou | ForEach-Object {
+
+    # Check if the user's employeeID attribute is already "E5"
+    if ($_.employeeID -ne "E5") {
+
+        # Save the user's information to a text file on the C: drive
+        $filename = "C:\user_info.txt"
+        $userinfo = "Name: $($_.Name)`nEmployeeID before change: $($_.employeeID)`n"
+        Add-Content $filename $userinfo
+
+        # Update the user's employeeID attribute to "E5"
+        Set-ADUser $_ -EmployeeID "E5"
+        Write-Host "EmployeeID updated for user $($_.Name)."
+    }
+}
+ 

@@ -1,0 +1,9 @@
+# Get all user accounts from a specific OU
+
+$users = Get-ADUser -Filter * -SearchBase "CN=Users,DC=corp,DC=contoso,DC=com"
+
+# Add each user to a specified group in Active Directory
+$group = "Cloud Group"
+foreach ($user in $users) {
+    Add-ADGroupMember -Identity $group -Members $user
+}

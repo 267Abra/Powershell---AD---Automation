@@ -1,0 +1,13 @@
+# Set the date format and calculate the new expiration date (one year from today)
+
+$dateFormat = "MM/dd/yyyy"
+$today = Get-Date
+$newExpirationDate = $today.AddYears(1).ToString($dateFormat)
+
+# Get all user accounts from a specific OU
+$users = Get-ADUser -Filter * -SearchBase "OU=USERS,OU=CORP,DC=corp,DC=contoso,DC=com"
+
+# Extend the expiration date of each user account by one year
+foreach ($user in $users) {
+    Set-ADUser -Identity $user -AccountExpirationDate $newExpirationDate
+}

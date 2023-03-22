@@ -1,0 +1,13 @@
+# Set the distinguished name of the source and target OUs
+
+$sourceOU = "OU=Terminated accounts,DC=corp,DC=contoso,DC=com"	
+$targetOU = "OU=USERS,OU=CORP,DC=corp,DC=contoso,DC=com"
+
+# Get all user accounts from the source OU
+$users = Get-ADUser -Filter * -SearchBase $sourceOU
+
+# Disable each user account and move it to the target OU
+foreach ($user in $users) {
+    Enable-ADAccount -Identity $user
+    Move-ADObject -Identity $user -TargetPath $targetOU
+}

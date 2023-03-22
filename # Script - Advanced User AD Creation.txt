@@ -1,0 +1,50 @@
+# Script for AD-User Creation
+# Includes ( street, country, zip , City, EmployeeID )
+
+# Import the Active Directory module
+Import-Module ActiveDirectory
+
+# Set variables for the user's attributes
+$FirstName = "Ela"
+$LastName = "Wojno"
+$DisplayName = "Ela, Wojno"
+$SamAccountName = "Ela.Wojno"
+$UserPrincipalName = "Ela.Wojno@contoso.com"
+$Office = "Headquarters"
+$Email = "Ela.Wojno@contoso.com"
+$Title = "Manager"
+$Department = "Sales"
+$Company = "Contoso"
+$Manager = "CN=Agata Kwiatek,OU=GBS,DC=corp,DC=contoso,DC=com"
+$Path = "OU=GBS,DC=corp,DC=contoso,DC=com"  # specify the distinguished name of the container
+$StreetAddress = "123 Main St."
+$City = "Seattle"
+$State = "WA"
+$PostalCode = "98101"
+$Country = "us"
+$EmployeeID = "0666982"
+
+New-ADUser `
+  -Name "$firstName $lastName" `
+  -GivenName $firstName `
+  -Surname $lastName `
+  -DisplayName $displayName `
+  -SamAccountName $SamAccountName `
+  -UserPrincipalName $UserPrincipalName `
+  -Office $office `
+  -EmailAddress $email `
+  -Title $jobTitle `
+  -Department $department `
+  -Company $company `
+  -Manager $manager `
+  -Path $Path `
+  -StreetAddress $StreetAddress `
+  -City $City `
+  -State $State `
+  -PostalCode $PostalCode `
+  -Country $Country `
+  -EmployeeID $EmployeeID `
+  -AccountExpirationDate (Get-Date).AddYears(1) `
+  -Enabled $true `
+  -AccountPassword $(ConvertTo-SecureString "Casio1$$asap" -AsPlainText -Force)
+Write-Host "User '$displayName' has been created with password '$password'
