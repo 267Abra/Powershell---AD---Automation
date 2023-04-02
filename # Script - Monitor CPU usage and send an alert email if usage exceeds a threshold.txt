@@ -1,0 +1,21 @@
+# Monitor CPU usage and send an alert email if usage exceeds a threshold
+
+$cpuThreshold = 15
+$emailFrom = "twice@twice212.onmicrosoft.com"
+$emailTo = "twice@twice212.onmicrosoft.com"
+$smtpServer = "smtp.office365.com"
+$smtpPort = 587
+$smtpCredential = New-Object System.Net.NetworkCredential("username", "password")
+$subject = "High CPU Usage Alert"
+
+while ($true) {
+    $cpuUsage = (Get-WmiObject Win32_Processor).LoadPercentage
+    if ($cpuUsage -gt $cpuThreshold) {
+        $body = "The CPU usage has exceeded the threshold of $cpuThreshold%`nCurrent CPU usage: $cpuUsage%"
+        $smtpClient = New-Object System.Net.Mail.SmtpClient($smtpServer, $smtpPort)
+        $smtpClient.EnableSsl = $true
+        $smtpClient.Credentials = $smtpCredential
+        $smtpClient.Send($emailFrom, $emailTo, $subject, $body)
+    }
+    Start-Sleep -Seconds 1
+}
