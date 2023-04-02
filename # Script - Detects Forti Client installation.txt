@@ -1,0 +1,31 @@
+$servicePath = "C:\Program Files\Fortinet\Fortinet\scheduler.exe"
+$serviceName = "FA_Scheduler"
+
+# Check if the script is running at startup
+if ((Get-WmiObject -Class Win32_StartupCommand | Where-Object {$_.Name -eq "FortinetSchedulerCheck"}).Location -eq "Registry") {
+    Write-Host "The Fortinet Scheduler Check script is running at startup."
+} else {
+    Write-Host "The Fortinet Scheduler Check script is not running at startup. Adding it to startup."
+    $command = "powershell.exe -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut("$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\FortinetSchedulerCheck.lnk")
+    $shortcut.TargetPath = "powershell.exe"
+    $shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    $shortcut.Save()
+}
+
+# Check if the service is installed by looking for the executable file
+if (Test-Path $servicePath) {
+    Write-Host "The Fortinet Scheduler Service is installed at $servicePath"
+    
+    # Check if the service is enabled in services.msc
+    $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+    if ($service) {
+        Write-Host "The Fortinet Scheduler Service is enabled and running."
+    } else {
+        Write-Host "The Fortinet Scheduler Service is installed but not enabled. System will be manually rebooted in 10 minutes."
+        Start-Sleep -Seconds 600
+        Restart-Computer
+    }
+} else {
+    Write-Host "The Fortinet Scheduler Service is not installed."
+}

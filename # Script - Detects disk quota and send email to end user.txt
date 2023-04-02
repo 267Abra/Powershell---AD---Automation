@@ -1,0 +1,62 @@
+# Set the disck variable
+
+$drive = "C:"
+
+# Get disck quota capacity
+
+$disk = Get-WmiObject Win32_LogicalDisk -Filter "DeviceID='$drive'"
+$total_space_gb = [math]::Round($disk.Size / 1GB, 2)
+$free_space_gb = [math]::Round($disk.FreeSpace / 1GB, 2)
+$used_space_gb = [math]::Round(($disk.Size - $disk.FreeSpace) / 1GB, 2)
+
+# Write output of  the disc quotas
+
+Write-Output "Drive $drive"
+Write-Output "Total Space: $total_space_gb GB"
+Write-Output "Used Space: $used_space_gb GB"
+Write-Output "Free Space: $free_space_gb GB"
+Write-Output ""
+Write-Output "You have $free_space_gb GB free space left."
+
+# Store variable of current credentials for the session 
+
+$cred = Get-Credential
+
+# Get output of the credentials file from file
+
+$passwordFile = "C:\Scripts\password.txt"
+$cred.Password | ConvertFrom-SecureString | Set-Content $passwordFile
+
+$password = Get-Content $passwordFile | ConvertTo-SecureString
+
+# Import All users from existent Domain
+
+$users = Get-ADUser -Filter *
+foreach ($user in $users) {
+    # Get user email address
+    $email = $user.EmailAddress }
+
+
+$smtpParams = @{
+    To = "twice@twice212.onmicrosoft.com"
+    Subject = "Quota limit"
+    SmtpServer = "smtp.office365.com"
+    Port = "587"
+    Credential = New-Object System.Management.Automation.PSCredential ($cred.UserName, $password)
+    From = "twice@twice212.onmicrosoft.com"
+    UseSsl = $true
+}
+
+$body = @"
+This is your quotas on C drive
+Drive $drive
+Total Space: $total_space_gb GB
+Used Space: $used_space_gb GB
+Free Space: $free_space_gb GB
+
+You have $free_space_gb GB free space left.
+Please take appriopriate action and in case clear your files.
+"@
+
+Send-MailMessage @smtpParams -Body $body
+ 

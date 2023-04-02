@@ -1,0 +1,6 @@
+#Get a list of running processes on a remote computer
+
+# "RemoteComputerName" -> change the hostname with your host name machine
+
+$computerName = "RemoteComputerName"
+Get-Process -ComputerName $computerName | Select-Object Name,Id,Description

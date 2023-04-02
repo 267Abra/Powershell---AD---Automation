@@ -1,0 +1,27 @@
+$serviceName = "FA_Scheduler"
+
+# Check if the service is running
+$service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+if ($service) {
+    if ($service.Status -eq "Running") {
+        Write-Host "The $serviceName service is running."
+    } else {
+        Write-Host "The $serviceName service is not running. Attempting to start the service..."
+        try {
+            Start-Service -Name $serviceName
+            Write-Host "The $serviceName service has been started."
+        } catch {
+            Write-Host "Failed to start the $serviceName service. System will be restarted in 10 minutes."
+            $prompt = New-Object -ComObject WScript.Shell
+            $prompt.Popup("System will be restarted in 10 minutes. Please save your work.",600,"System Restart Warning",0x1)
+            Start-Sleep -Seconds 600
+            Restart-Computer
+        }
+    }
+} else {
+    Write-Host "The $serviceName service is not installed. System will be restarted in 10 minutes."
+    $prompt = New-Object -ComObject WScript.Shell
+    $prompt.Popup("System will be restarted in 10 minutes. Please save your work.",600,"System Restart Warning",0x1)
+    Start-Sleep -Seconds 600
+    Restart-Computer
+}
